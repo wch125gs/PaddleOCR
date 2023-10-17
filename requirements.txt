@@ -1,5 +1,5 @@
 paddleocr       
-paddlepaddle     
+paddlepaddle     ==2.5.1
 streamlit       
 Pillow         
 opencv-python     
