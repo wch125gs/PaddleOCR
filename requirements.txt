@@ -1,9 +1,9 @@
 pip
-paddleocr>=2.0.1
 opencv-contrib-python
 opencv-python
 openpyxl
-paddlepaddle==2.10.0
+paddleocr==2.3.0
+paddlepaddle==2.4.2
 Pillow
 paddle-bfloat
 
