@@ -1,4 +1,4 @@
-paddleocr       ==2.0.1
+paddleocr       ==2.4
 paddlepaddle     ==2.4.2
 streamlit       
 Pillow         
