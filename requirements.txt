@@ -2,7 +2,7 @@ paddleocr
 opencv-contrib-python
 opencv-python
 openpyxl
-paddlepaddle==2.0.0
+paddleocr>=2.0.1
 Pillow
 paddle-bfloat
 
