@@ -2,5 +2,6 @@ paddleocr       ==2.6
 paddlepaddle     ==2.4.2
 streamlit       
 Pillow         
-opencv-python     
+opencv-python    
+google
 
