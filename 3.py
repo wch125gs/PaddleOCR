@@ -126,6 +126,47 @@ if uploaded_files:
                             similarity = Levenshtein.ratio(target_text, line[1][0])
                             if similarity >= similarity_threshold:
                                 st.write(f"認識した聖遺物の名前は： '{line[1][0]}' ,既存の聖遺物の名前は:{target_text}, 相似度: {similarity:.2f}")
+                                 # 设置搜索关键字
+                                query = target_text+"gamewith"
+
+                                # 使用Google搜索库执行搜索
+                                search_results = list(search(query, num=1, stop=1, pause=2))
+
+                                # 获取第一个搜索结果的URL
+                                first_result_url = search_results[0]
+
+                                response = requests.get(first_result_url)
+
+                                if response.status_code == 200:
+                                    soup = BeautifulSoup(response.text, 'html.parser')
+
+                                    # 查找带有特定class属性的<div>元素
+                                    genshin_saka_div = soup.find('div', class_='genshin_osusume')
+
+                                    # 检查是否找到了目标<div>元素
+                                    if genshin_saka_div:
+                                        content = ""
+                                        td_elements = genshin_saka_div.find_all('td')
+                                        for i, td in enumerate(td_elements):
+                                            # 查找所有的<a>元素
+                                            a_elements = td.find_all('a')
+
+                                            for a in a_elements:
+                                                # 获取<a>元素中的文本内容
+                                                text = a.get_text()
+                                                content += text 
+                                            if (i +1) % 2 == 0:
+                                                content += "\n---------------------\n"
+
+                                        # 去掉首尾的空白
+                                        content = content.strip()
+
+                                        st.write(f"{content}")
+                                    else:
+                                        content = "未找到指定的<div>元素"
+                                else:
+                                    st.write(f"未能从URL中检索内容。状态码：{response.status_code}")
+
                                 break
 
 
@@ -133,47 +174,7 @@ if uploaded_files:
             st.write("File 'search_artifacts_list.txt' not found")
         
 
-        # 设置搜索关键字
-        query = target_text+"gamewith"
-
-        # 使用Google搜索库执行搜索
-        search_results = list(search(query, num=1, stop=1, pause=2))
-
-        # 获取第一个搜索结果的URL
-        first_result_url = search_results[0]
-
-        response = requests.get(first_result_url)
-
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            # 查找带有特定class属性的<div>元素
-            genshin_saka_div = soup.find('div', class_='genshin_osusume')
-
-            # 检查是否找到了目标<div>元素
-            if genshin_saka_div:
-                content = ""
-                td_elements = genshin_saka_div.find_all('td')
-                for i, td in enumerate(td_elements):
-                    # 查找所有的<a>元素
-                    a_elements = td.find_all('a')
-
-                    for a in a_elements:
-                        # 获取<a>元素中的文本内容
-                        text = a.get_text()
-                        content += text 
-                    if (i +1) % 2 == 0:
-                        content += "\n---------------------\n"
-
-                # 去掉首尾的空白
-                content = content.strip()
-
-                st.write(f"{content}")
-            else:
-                content = "未找到指定的<div>元素"
-        else:
-            st.write(f"未能从URL中检索内容。状态码：{response.status_code}")
-
+       
         
         # 可视化
         result = result[0]
