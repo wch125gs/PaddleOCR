@@ -6,6 +6,8 @@ import difflib
 import Levenshtein
 from googlesearch import search
 
+
+
 # 设置搜索关键字
 query = "聖遺物一覧gamewith"
 
@@ -58,21 +60,24 @@ language_texts = {
         'upload_prompt': "上传多张图片...",
         'results_header': "识别结果:",
         'visualization_caption': "可视化",
-        'language': "语言选择"
+        'language': "语言选择",
+        'image': '示例图像'
     },
     'en': {
         'title': "Image Recognition Web App",
         'upload_prompt': "Upload multiple images...",
         'results_header': "Recognition results:",
         'visualization_caption': "Visualization",
-        'language': "Select Language"
+        'language': "Select Language",
+        'image': 'Sample Image'
     },
     'japan': {
         'title': "画像認識ウェブアプリ",
         'upload_prompt': "複数の画像をアップロード...",
         'results_header': "認識結果:",
         'visualization_caption': "可視化",
-        'language': "言語選択"
+        'language': "言語選択",
+        'image': 'サンプル画像'
     },
     # 添加其他语言的文本
 }
@@ -82,6 +87,8 @@ languages = list(language_texts.keys())
 selected_lang = st.selectbox("Select Language", languages)
 
 st.title(language_texts[selected_lang]['title'])
+# 显示示例图像
+st.image("1.png", caption=language_texts[selected_lang]['image'], use_column_width=True)
 
 
 # 添加文件上传小部件
@@ -89,7 +96,7 @@ uploaded_files = st.file_uploader(language_texts[selected_lang]['upload_prompt']
                                   type=["jpg", "png", "jpeg"], accept_multiple_files=True)
 
 # 设置相似度阈值
-similarity_threshold = 0.8  # 根据需求调整相似度阈值
+similarity_threshold = 0.7  # 根据需求调整相似度阈值
 
 
 # 初始化 OCR 对象
