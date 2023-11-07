@@ -3,6 +3,52 @@ from PIL import Image
 from paddleocr import PaddleOCR, draw_ocr
 import os
 import difflib
+import Levenshtein
+from googlesearch import search
+
+# 设置搜索关键字
+query = "聖遺物一覧gamewith"
+
+# 使用Google搜索库执行搜索
+search_results = list(search(query, num=1, stop=1, pause=2))
+
+# 获取第一个搜索结果的URL
+first_result_url = search_results[0]
+
+# 从URL中提取内容
+import requests
+from bs4 import BeautifulSoup
+
+response = requests.get(first_result_url)
+if response.status_code == 200:
+    soup = BeautifulSoup(response.text, 'html.parser')
+    # 提取<div class="genshin saka">中的文本内容
+    genshin_saka_div = soup.find('div', class_='genshin_saka')
+    if genshin_saka_div:
+        content = ""
+        td_elements = genshin_saka_div.find_all('td')
+        for td in td_elements:
+            # 查找所有的<a>元素
+            a_elements = td.find_all('a')
+
+            for a in a_elements:
+                # 获取<a>元素中的文本内容
+                text = a.get_text()
+                content += text + " "
+
+        # 去掉首尾的空白
+        content = content.strip()
+    else:
+        content = "未找到指定的<div>元素"
+
+    # 将内容保存为文本文件
+    with open('search_artifacts_list.txt', 'w', encoding='utf-8') as textfile:
+        textfile.write(content)
+
+    print(f"Content saved to 'search_artifacts_list.text'")
+else:
+    print(f"Failed to retrieve content from the URL. Status code: {response.status_code}")
+
 
 
 # 定义语言对应的文本
@@ -42,57 +88,9 @@ st.title(language_texts[selected_lang]['title'])
 uploaded_files = st.file_uploader(language_texts[selected_lang]['upload_prompt'],
                                   type=["jpg", "png", "jpeg"], accept_multiple_files=True)
 
-# 圣遗物适用人物
-Recommended_Artifacts = [
-    {
-        'character': 'ベネット',
-        'artifact_name': '旧貴族の銀瓶',
-        'main_attributes': ['HP%', '炎元素ダメージ'],
-        'sub_attributes': 'HP%/元素チャージ/会心系',
-    },
-    {
-        'character': 'ベネット',
-        'artifact_name': '旧貴族の仮面',
-        'main_attributes': ['与える治療効果', '会心率', '会心ダメージ'],
-        'sub_attributes': 'HP%/元素チャージ/会心系',
-    },
-    {
-        'character': 'ベネット',
-        'artifact_name': '旧貴族の花',
-        'main_attributes': ['HP%'],
-        'sub_attributes': 'HP%/元素チャージ/会心系',
-    },
-    {
-        'character': 'ベネット',
-        'artifact_name': '旧貴族の羽根',
-        'main_attributes': ['攻撃力%'],
-        'sub_attributes': 'HP%/元素チャージ/会心系',
-    },
-    {
-        'character': 'ベネット',
-        'artifact_name': '旧貴族の時計',
-        'main_attributes': ['HP', '元素チャージ'],
-        'sub_attributes': 'HP%/元素チャージ/会心系',
-    },
-    {
-        'character': '夜蘭',
-        'artifact_name': '威厳の鍔',
-        'main_attributes': ['HP%'],
-        'sub_attributes': '会心系/HP%/元素チャージ',
-    },
-    {
-        'character': '夜蘭',
-        'artifact_name': '雷雲の印籠',
-        'main_attributes': ['HP%','元素チャージ'],
-        'sub_attributes': '会心系/元素チャージ/HP',
-    },
-    {
-        'character': '雷電将軍',
-        'artifact_name': '雷雲の印籠',
-        'main_attributes': ['攻撃力%','元素チャージ'],
-        'sub_attributes': '会心系/攻撃力%/元素熟知',
-    },
-]
+# 设置相似度阈值
+similarity_threshold = 0.8  # 根据需求调整相似度阈值
+
 
 # 初始化 OCR 对象
 ocr = PaddleOCR(use_angle_cls=True, lang=selected_lang)
@@ -107,70 +105,75 @@ if uploaded_files:
 
         # 进行文本识别
         result = ocr.ocr("temp_image.jpg", cls=True)
-
-        # 获取第一行的文字内容
-        line_texts = [element[1][0] for element in result[0] if isinstance(element, list) and len(element) > 1 and len(element[1]) > 0]
-        first_line_texts = line_texts[0]
-
-        # 获取第三行的文字内容
-        third_line_texts = line_texts[2]
-
-        # 判断是否有识别结果
-        if first_line_texts and len(first_line_texts) >= 0:
-            artifact_name = first_line_texts
-            main_attribute =  third_line_texts
-
-            best_match = None
-            best_match_similarity = 0.8
-
-           # 存储匹配结果的列表
-            matches = []
-
-            # 遍历所有推荐的圣遗物信息
-            for recommendation in Recommended_Artifacts:
-                # 计算圣遗物名称的相似度
-                artifact_similarity = difflib.SequenceMatcher(None, artifact_name, recommendation['artifact_name']).ratio()
-
-                # 遍历推荐圣遗物的主属性
-                for main_attribute in recommendation.get('main_attributes', []):
-                    # 计算主属性的相似度
-                    main_attribute_similarity = difflib.SequenceMatcher(None, main_attribute, main_attribute).ratio()
-
-                    # 计算总体相似度
-                    total_similarity = (artifact_similarity + main_attribute_similarity) / 2
-
-                    # 存储匹配结果
-                    matches.append({'recommendation': recommendation, 'total_similarity': total_similarity})
-
-            # 根据相似度降序排列匹配结果
-            sorted_matches = sorted(matches, key=lambda x: x['total_similarity'], reverse=True)
-
-            # 输出前三个匹配结果
-            st.subheader("判断结果:")
-            if sorted_matches:
-                for i, match in enumerate(sorted_matches[:3]):
-                    recommendation = match['recommendation']
-                    total_similarity = match['total_similarity']
-
-                    st.write(f"Top {i + 1}")
-                    st.write(f"適合度: {total_similarity:.2%}")
-                    st.write(f"人物名称: {recommendation['character']}")
-                    st.write(f"聖遺物名称: {recommendation['artifact_name']}")
-                    if 'main_attributes' in recommendation:
-                        st.write(f"メイン属性: {', '.join(recommendation['main_attributes'])}")
-                    if 'sub_attributes' in recommendation:
-                        st.write(f"サブ属性: {recommendation['sub_attributes']}")
-                    st.write("--------------")
-            else:
-                st.write("未找到匹配的人物")
-
+        
     
-        # 打印识别结果
+        #打印识别结果
+
         
         #for idx, res in enumerate(result):
             #st.write(f"内容:")
             #for line in res:
                 #st.write(line[1][0])
+
+        # 从文件 "1.text" 中读取内容
+        if os.path.isfile("search_artifacts_list.txt"):
+            with open("search_artifacts_list.txt", "r",encoding="utf-8") as file:
+                target_texts = [line.strip() for line in file.read().strip().split()]
+                # 在识别结果中查找相同的词语
+                for target_text in target_texts:
+                    for idx, res in enumerate(result):
+                        for line in res:
+                            similarity = Levenshtein.ratio(target_text, line[1][0])
+                            if similarity >= similarity_threshold:
+                                st.write(f"認識した聖遺物の名前は： '{line[1][0]}' ,既存の聖遺物の名前は:{target_text}, 相似度: {similarity:.2f}")
+                                break
+
+
+        else:
+            st.write("File 'search_artifacts_list.txt' not found")
+        
+
+        # 设置搜索关键字
+        query = target_text+"gamewith"
+
+        # 使用Google搜索库执行搜索
+        search_results = list(search(query, num=1, stop=1, pause=2))
+
+        # 获取第一个搜索结果的URL
+        first_result_url = search_results[0]
+
+        response = requests.get(first_result_url)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # 查找带有特定class属性的<div>元素
+            genshin_saka_div = soup.find('div', class_='genshin_osusume')
+
+            # 检查是否找到了目标<div>元素
+            if genshin_saka_div:
+                content = ""
+                td_elements = genshin_saka_div.find_all('td')
+                for i, td in enumerate(td_elements):
+                    # 查找所有的<a>元素
+                    a_elements = td.find_all('a')
+
+                    for a in a_elements:
+                        # 获取<a>元素中的文本内容
+                        text = a.get_text()
+                        content += text 
+                    if (i +1) % 2 == 0:
+                        content += "\n---------------------\n"
+
+                # 去掉首尾的空白
+                content = content.strip()
+
+                st.write(f"{content}")
+            else:
+                content = "未找到指定的<div>元素"
+        else:
+            st.write(f"未能从URL中检索内容。状态码：{response.status_code}")
+
         
         # 可视化
         result = result[0]
