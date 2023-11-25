@@ -42,24 +42,24 @@
         </select>
         <br>
         <label for="artifactPart">部位:</label>
-        <select id="artifactPart">
-            <option value="part1">理の冠</option>
-            <option value="part2">空の杯</option>
-            <option value="part3">時の砂</option>
-            <option value="part4">生の花</option>
-            <option value="part5">死の羽</option>
+        <select id="artifactPart"　onchange="updateMainAttributes()">
+            <option value="理の冠">理の冠</option>
+            <option value="空の杯">空の杯</option>
+            <option value="時の砂">時の砂</option>
+            <option value="生の花">生の花</option>
+            <option value="死の羽">死の羽</option>
             <!-- 添加更多的圣遗物部位选项 -->
         </select>
         <br>
         <label for="mainAttribute">主属性:</label>
-        <select id="mainAttribute">
-            <option value="">请选择</option>
+        <select id="mainAttribute"　onchange="updateSubAttributes()">
+            <option value="">部位を選択してください。</option>
             <!-- 主属性选项将在这里动态生成 -->
         </select>
         <br>
         <label for="subAttribute">副属性:</label>
         <select id="subAttribute">
-            <option value="">请选择</option>
+            <option value="">主属性を選択してください。</option>
             <!-- 副属性选项将在这里动态生成 -->
         </select>
         <br>
@@ -94,64 +94,51 @@
             '物流ダメージ': ['会心率','会心ダメージ','攻撃力', '攻撃力パーセンテージ','元素熟知','元素チャージ効率','HP','HPパーセンテージ','防御力','防御力パーセンテージ'],
 
         };
+        function updateMainAttributes() {
+            var artifactPart = document.getElementById("artifactPart");
+            var mainAttribute = document.getElementById("mainAttribute");
 
-        document.getElementById('artifactPart').addEventListener('change', function() {
-            var selectedPart = this.value;
-            var mainAttributeSelect = document.getElementById('mainAttribute');
+            // 获取部位的值
+            var selectedValue = artifactPart.value;
 
-            // 清空主属性的选项
-            mainAttributeSelect.innerHTML = '';
+            // 清空主属性选项
+            mainAttribute.innerHTML = "";
 
-            // 根据选择的部位添加新的选项
-            var options = mainAttributeOptions[selectedPart];
-            if (options) {
-                for (var i = 0; i < options.length; i++) {
-                    var option = document.createElement('option');
-                    option.value = options[i];
-                    option.text = options[i];
-                    mainAttributeSelect.appendChild(option);
-                }
+            // 添加新的主属性选项
+            for (var i = 0; i < mainAttributeOptions[selectedValue].length; i++) {
+            var option = document.createElement("option");
+            option.text = mainAttributeOptions[selectedValue][i];
+            mainAttribute.add(option);
             }
-        });
+            //副属性选项更新
+            updateSubAttributes();
+        }
+        
+       
 
-        document.getElementById('mainAttribute').addEventListener('change', function() {
-            var selectedAttribute = this.value;
-            var subAttributeSelect = document.getElementById('subAttribute');
+        function updateSubAttributes() {
+        var mainAttribute = document.getElementById("mainAttribute");
+        var subAttribute = document.getElementById("subAttribute");
 
-            // 清空副属性的选项
-            subAttributeSelect.innerHTML = '';
+        // 获取主属性的值
+        var selectedValue = mainAttribute.value;
 
-            // 根据选择的主属性添加新的选项
-            var options = subAttributeOptions[selectedAttribute];
-            if (options) {
-                for (var i = 0; i < options.length; i++) {
-                    var option = document.createElement('option');
-                    option.value = options[i];
-                    option.text = options[i];
-                    subAttributeSelect.appendChild(option);
-                }
-            }
-        });    
-        document.getElementById('characterForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        // 清空副属性选项
+        subAttribute.innerHTML = "";
 
-            var relic = document.getElementById('relic').value;
-            var mainAttribute = document.getElementById('mainAttribute').value;
-            var subAttribute = document.getElementById('subAttribute').value;
+        // 添加新的副属性选项
+        for (var i = 0; i < subAttributeOptions[selectedValue].length; i++) {
+        var option = document.createElement("option");
+        option.text = subAttributeOptions[selectedValue][i];
+        subAttribute.add(option);
+        }
+    }
 
-            var result = '';
+    // 页面加载时初始化主属性和副属性选项
+    updateMainAttributes();
 
-            // 根据用户的选择来决定适合的角色
-            if (relic === 'relic1' && mainAttribute === 'attribute1' && subAttribute === 'subAttribute1') {
-                result = '角色1';
-            } else if (relic === 'relic2' && mainAttribute === 'attribute2' && subAttribute === 'subAttribute2') {
-                result = '角色2';
-            } else {
-                result = '没有找到适合的角色';
-            }
 
-            document.getElementById('result').innerText = '适合的角色: ' + result;
-        });
+       
     </script>
 </body>
 </html>
